@@ -1,0 +1,372 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <xacro:include filename="$(find uuv_descriptions)/urdf/common.urdf.xacro"/>
+  <xacro:include filename="$(find uuv_sensor_ros_plugins)/urdf/sensor_snippets.xacro"/>
+  <xacro:include filename="$(find uuv_gazebo_ros_plugins)/urdf/snippets.xacro"/>
+  
+  <!-- Parameters -->
+  <xacro:property name="visual_mesh_file" value="file://$(find hydrone_underwater_description)/meshes/hydrone_base.dae"/>
+
+  <!-- Mass, see p.28 in Berg2012 -->
+  <xacro:property name="mass" value="1.42887"/>
+
+  <xacro:macro name="hydrone_underwater_base"
+    params="namespace *gazebo use_simplified_mesh inertial_reference_frame">
+    <!-- Defining base link according to ROS conventions: x forward, z up -->
+    <link name="${namespace}/base_link">
+      <inertial>
+        <mass value="${mass}"/>
+        <origin xyz="0 0 0.115" rpy="0 0 0"/>
+        <!-- <inertia ixx="525.39" ixy="1.44" ixz="33.41" iyy="794.20" iyz="2.6" izz="691.23"/> -->
+        <!-- <inertia ixx="0.52539" ixy="0.00144" ixz="0.03341" iyy="0.79420" iyz="0.0026" izz="0.69123"/>         -->
+        <!-- <inertia
+          ixx="1.0" ixy="1.0" ixz="1.0"
+          iyy="1.0" iyz="1.0"
+          izz="1.0"/> -->
+        <!-- <inertia
+          ixx="0.014464898" ixy="0.000204146" ixz="-0.000787033"
+          iyy="0.028817961" iyz="-0.00011572"
+          izz="0.015410484"/>
+         -->
+         <inertia ixx="0.01152" ixy="0.0" ixz="0.0" iyy="0.01152" iyz="0.0" izz="0.0218" />
+      </inertial> 
+      <visual>
+          <origin xyz="-0.2175 0.2175 0.05" rpy="1.5707 0 0"/>
+          <geometry>
+            <mesh filename="${visual_mesh_file}" scale="1 1 1"/>           
+          </geometry>
+      </visual> 
+
+       <collision>
+        <origin xyz="-0.2175 0.2175 0.05" rpy="1.5707 0 0"/>
+        <geometry>
+          <mesh filename="${visual_mesh_file}" scale="1 1 1"/>        
+          <!-- <box size="0.44 0.44 0.05"/> -->
+        </geometry>
+      </collision>    
+    </link>
+
+
+
+
+
+    <joint name="${namespace}/thruster_1_joint" type="continuous">
+      <origin xyz="0.19725 -0.19725 0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_1"/>
+    </joint>
+
+    <link name="${namespace}/thruster_1">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.001">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      <!-- <xacro:box_inertial x="0.000088464" y="0.000092478" z="0.000152266" mass="0.011">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial> -->
+      <collision>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_0_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <!-- Name of the thruster link -->
+        <linkName>${namespace}/thruster_1</linkName>
+        <!-- Name of the joint between thruster and vehicle base link -->
+        <jointName>${namespace}/thruster_1_joint</jointName>
+        <!-- Make the thruster aware of its id -->
+        <thrusterID>1</thrusterID>
+        <!-- Gain of the input command signal -->
+        <gain>1</gain>
+        <!-- Maximum allowed input value for the input signal for thruster unit -->
+        <clampMax>-3000</clampMax>
+        <!-- Minimum allowed value for the input signal for thruster unit -->
+        <clampMin>3000</clampMin>
+        <!-- Minimum and maximum thrust force output allowed -->
+        <thrustMin>-50</thrustMin>
+        <thrustMax>50</thrustMax>
+        <!--
+        Value from 0 to 1 to set the efficiency of the output thrust force
+        Default value is 1.0
+        -->
+        <thrust_efficiency>1</thrust_efficiency>
+        <!--
+        Value from 0 to 1 to set the efficiency of the propeller as a factor
+        to be multiplied to the current value of the state variable at each
+        iteration.
+        Default value is 1.0
+        -->
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.0002</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_1">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+
+
+    <joint name="${namespace}/thruster_2_joint" type="continuous">
+      <origin xyz="0.19725 0.19725 0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 -1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_2"/>
+    </joint>
+
+    <link name="${namespace}/thruster_2">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.001">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_2_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <!-- Name of the thruster link -->
+        <linkName>${namespace}/thruster_2</linkName>
+        <!-- Name of the joint between thruster and vehicle base link -->
+        <jointName>${namespace}/thruster_2_joint</jointName>
+        <!-- Make the thruster aware of its id -->
+        <thrusterID>2</thrusterID>
+        <!-- Gain of the input command signal -->
+        <gain>1</gain>
+        <!-- Maximum allowed input value for the input signal for thruster unit -->
+        <clampMax>-3000</clampMax>
+        <!-- Minimum allowed value for the input signal for thruster unit -->
+        <clampMin>3000</clampMin>
+        <!-- Minimum and maximum thrust force output allowed -->
+        <thrustMin>-50</thrustMin>
+        <thrustMax>50</thrustMax>
+        <!--
+        Value from 0 to 1 to set the efficiency of the output thrust force
+        Default value is 1.0
+        -->
+        <thrust_efficiency>1</thrust_efficiency>
+        <!--
+        Value from 0 to 1 to set the efficiency of the propeller as a factor
+        to be multiplied to the current value of the state variable at each
+        iteration.
+        Default value is 1.0
+        -->
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.0002</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_2">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+   
+
+
+
+    <joint name="${namespace}/thruster_3_joint" type="continuous">
+      <origin xyz="-0.19725 0.19725 0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_3"/>
+    </joint>
+
+    <link name="${namespace}/thruster_3">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.001">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller_1.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_3_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <!-- Name of the thruster link -->
+        <linkName>${namespace}/thruster_3</linkName>
+        <!-- Name of the joint between thruster and vehicle base link -->
+        <jointName>${namespace}/thruster_3_joint</jointName>
+        <!-- Make the thruster aware of its id -->
+        <thrusterID>3</thrusterID>
+        <!-- Gain of the input command signal -->
+        <gain>1</gain>
+        <!-- Maximum allowed input value for the input signal for thruster unit -->
+        <clampMax>-3000</clampMax>
+        <!-- Minimum allowed value for the input signal for thruster unit -->
+        <clampMin>3000</clampMin>
+        <!-- Minimum and maximum thrust force output allowed -->
+        <thrustMin>-50</thrustMin>
+        <thrustMax>50</thrustMax>
+        <!--
+        Value from 0 to 1 to set the efficiency of the output thrust force
+        Default value is 1.0
+        -->
+        <thrust_efficiency>1</thrust_efficiency>
+        <!--
+        Value from 0 to 1 to set the efficiency of the propeller as a factor
+        to be multiplied to the current value of the state variable at each
+        iteration.
+        Default value is 1.0
+        -->
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.0002</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_3">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+
+
+    <joint name="${namespace}/thruster_4_joint" type="continuous">
+      <origin xyz="-0.19725 -0.19725 0.055" rpy="0 0 0"/>
+      <axis xyz="0 0 -1"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/thruster_4"/>
+    </joint>
+
+    <link name="${namespace}/thruster_4">
+      <xacro:box_inertial x="0" y="0" z="0" mass="0.001">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:box_inertial>
+      
+      <collision>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>
+      </collision>
+
+      <visual>
+        <origin xyz="-0.03 -0.0315 -0.01" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="file://$(find hydrone_underwater_description)/meshes/aquatic_propeller.dae" scale="1 1 1"/>
+        </geometry>        
+      </visual>
+    </link>
+
+    <gazebo>
+      <plugin name="${namespace}_4_thruster_model" filename="libuuv_thruster_ros_plugin.so">        
+        <!-- Name of the thruster link -->
+        <linkName>${namespace}/thruster_4</linkName>
+        <!-- Name of the joint between thruster and vehicle base link -->
+        <jointName>${namespace}/thruster_4_joint</jointName>
+        <!-- Make the thruster aware of its id -->
+        <thrusterID>4</thrusterID>
+        <!-- Gain of the input command signal -->
+        <gain>1</gain>
+        <!-- Maximum allowed input value for the input signal for thruster unit -->
+        <clampMax>-3000</clampMax>
+        <!-- Minimum allowed value for the input signal for thruster unit -->
+        <clampMin>3000</clampMin>
+        <!-- Minimum and maximum thrust force output allowed -->
+        <thrustMin>-50</thrustMin>
+        <thrustMax>50</thrustMax>
+        <!--
+        Value from 0 to 1 to set the efficiency of the output thrust force
+        Default value is 1.0
+        -->
+        <thrust_efficiency>1</thrust_efficiency>
+        <!--
+        Value from 0 to 1 to set the efficiency of the propeller as a factor
+        to be multiplied to the current value of the state variable at each
+        iteration.
+        Default value is 1.0
+        -->
+        <propeller_efficiency>1</propeller_efficiency>
+
+        <dynamics>
+          <type>FirstOrder</type>
+          <timeConstant>0.05</timeConstant>
+        </dynamics>
+
+        <conversion>
+          <type>Basic</type>
+          <rotorConstant>0.0002</rotorConstant>
+        </conversion>  
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="${namespace}/thruster_4">
+      <selfCollide>false</selfCollide>
+      <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <gazebo reference="${namespace}/base_link">      
+      <material>Gazebo/White</material>
+    </gazebo>
+
+    <!-- Set up hydrodynamic plugin given as input parameter -->
+    <xacro:insert_block name="gazebo"/>
+
+    <!-- <xacro:include filename="$(find hydrone_underwater_description)/urdf/hydrone_underwater_sensors.xacro" /> -->
+    <!-- <xacro:include filename="$(find hydrone_underwater_description)/urdf/hydrone_underwater_actuators.xacro" /> -->
+
+  </xacro:macro>
+
+</robot>
