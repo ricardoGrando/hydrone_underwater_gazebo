@@ -25,4 +25,12 @@
   <test_depend>xacro</test_depend>
   <test_depend>rosunit</test_depend>
 
+  <depend>gazebo_msgs</depend>
+  <depend>gazebo_plugins</depend>
+  <depend>geometry_msgs</depend>
+  <depend>mav_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>rotors_gazebo_plugins</depend>
+  <depend>sensor_msgs</depend>
+
 </package>
